@@ -1,0 +1,11 @@
+{
+    "IsEncrypted": false,
+    "Values": {
+        "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+        "FUNCTIONS_WORKER_RUNTIME": "dotnet",
+        "EVENTHUB_CONNECTION_STRING": "your-eventhub-connection-string",
+        "STORAGE_CONTAINER_STRING": "your-storage-connection-string",
+        "STORAGE_CONTAINER": "databricks",
+        "RATINGS_FILEPATH": "rawdata/ml-latest/ratings.csv"
+    }
+}

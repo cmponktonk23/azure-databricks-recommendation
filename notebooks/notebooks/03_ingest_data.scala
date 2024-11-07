@@ -42,11 +42,11 @@ val incomingStream = spark
 val messages =
   incomingStream
   .withColumn("Offset", $"offset".cast(LongType))
-  .withColumn("Time (readable)", $"enqueuedTime".cast(TimestampType))
+  .withColumn("TimeReadable", $"enqueuedTime".cast(TimestampType))
   .withColumn("Timestamp", $"enqueuedTime".cast(LongType))
   .withColumn("Body", $"body".cast(StringType))
-  .withWatermark("Time (readable)", "10 minutes")
-  .select("Offset", "Time (readable)", "Timestamp", "Body")
+  .withWatermark("TimeReadable", "10 minutes")
+  .select("Offset", "TimeReadable", "Timestamp", "Body")
 
 messages.printSchema
 

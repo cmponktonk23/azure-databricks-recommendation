@@ -243,6 +243,7 @@
         {
             "name": "[parameters('ratingsContainerName')]",
             "type": "Microsoft.ContainerInstance/containerGroups",
+            "condition": false,
             "apiVersion": "2017-08-01-preview",
             "location": "[resourceGroup().location]",
             "properties": {
