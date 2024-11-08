@@ -68,6 +68,23 @@ cluster_exists () {
     fi
 }
 
+function wait_for_cluster() {
+    local cluster_id=$1
+    local target_state=$2
+    local current_state=""
+    
+    echo "Waiting for cluster $cluster_id to reach state $target_state..."
+    while true; do
+        current_state=$(databricks clusters get --cluster-id $cluster_id | jq -r ".state")
+        if [ "$current_state" == "$target_state" ]; then
+            echo "Cluster is now $target_state"
+            break
+        fi
+        echo "Current state: $current_state. Waiting..."
+        sleep 30
+    done
+}
+
 yes_or_no () {
     while true; do
         read -p "$(echo -e ${ORANGE}"$* [y/n]: "${NC})" yn
@@ -105,7 +122,28 @@ _main() {
     databricks workspace import "../../notebooks/dashboards/07_user_dashboard.dbc" "/recommender_dashboards/07_user_dashboard" \
         --format DBC --language PYTHON # --overwrite, cannot be used for DBC format
     
-    # , mount storage and setup up tables
+    # Create common cluster
+    cluster_config="./config/cluster.config.json"
+    cluster_name=$(cat $cluster_config | jq -r ".cluster_name")
+    if cluster_exists $cluster_name; then 
+        echo "Cluster ${cluster_name} already exists!"
+    else
+        echo "Creating cluster ${cluster_name}..."
+        databricks clusters create --json-file $cluster_config
+    fi
+
+    # Attach library to cluster
+    cluster_id=$(databricks clusters list | awk '/'$cluster_name'/ {print $1}')
+    databricks libraries install --maven-coordinates com.microsoft.azure:azure-eventhubs-spark_2.12:2.3.17 --cluster-id $cluster_id
+
+    echo "Waiting for cluster to be ready..."
+    wait_for_cluster $cluster_id "RUNNING"
+
+    for config in ./config/job.*.config.json ./config/run.*.config.json; do
+        sed -i "s/\${cluster_id}/$cluster_id/g" $config
+    done
+    
+    # mount storage and setup up tables
     echo "Mounting blob storage. This may take a while as cluster spins up..."
     wait_for_run $(databricks runs submit --json-file "./config/run.mountstorage.config.json" | jq -r ".run_id" )
     echo "Setting up tables. This may take a while as cluster spins up..."
@@ -117,21 +155,6 @@ _main() {
     databricks jobs run-now --job-id $(databricks jobs create --json-file "./config/job.scoremodel.config.json" | jq ".job_id")
     databricks jobs run-now --job-id $(databricks jobs create --json-file "./config/job.refitmodel.config.json" | jq ".job_id")
     databricks jobs run-now --job-id $(databricks jobs create --json-file "./config/job.ingestdata.config.json" | jq ".job_id")
-
-    # Create initial cluster, if not yet exists
-    cluster_config="./config/cluster.config.json"
-    cluster_name=$(cat $cluster_config | jq -r ".cluster_name")
-    if cluster_exists $cluster_name; then 
-        echo "Cluster ${cluster_name} already exists!"
-    else
-        echo "Creating cluster ${cluster_name}..."
-        databricks clusters create --json-file $cluster_config
-    fi
-
-    # Attach library
-    cluster_id=$(databricks clusters list | awk '/'$cluster_name'/ {print $1}')
-    databricks libraries install --maven-coordinates com.microsoft.azure:azure-eventhubs-spark_2.11:2.3.13 --cluster-id $cluster_id
-
 }
 
 _main

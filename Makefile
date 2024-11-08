@@ -44,7 +44,7 @@ deploy: deploy_resources data
 ## Deploys entire solutions using Docker
 deploy_w_docker:
 	docker build -t devlace/azdatabricksrecommend -f deploy/Dockerfile .
-	docker run -it devlace/azdatabricksrecommend
+	docker run --rm -it devlace/azdatabricksrecommend
 
 ## Delete all compiled Python files 
 clean:
