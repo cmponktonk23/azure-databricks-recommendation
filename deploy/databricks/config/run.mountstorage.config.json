@@ -1,21 +1,6 @@
 {
     "run_name": "Mount storage",
-    "new_cluster": {
-        "spark_version": "15.4.x-scala2.12",
-        "node_type_id": "Standard_D4ds_v5",
-        "num_workers": 0,
-        "spark_conf": {
-            "spark.databricks.cluster.profile": "singleNode",
-            "spark.master": "local[*, 4]"
-        },
-        "spark_env_vars": {
-            "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
-        },
-        "enable_photon": true,
-        "custom_tags": {
-            "ResourceClass": "SingleNode"
-        }
-    },
+    "existing_cluster_id": "${cluster_id}",
     "libraries": [],
     "timeout_seconds": 3600,
     "notebook_task": {
