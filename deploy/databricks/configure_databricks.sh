@@ -68,6 +68,23 @@ cluster_exists () {
     fi
 }
 
+function wait_for_cluster() {
+    local cluster_id=$1
+    local target_state=$2
+    local current_state=""
+    
+    echo "Waiting for cluster $cluster_id to reach state $target_state..."
+    while true; do
+        current_state=$(databricks clusters get --cluster-id $cluster_id | jq -r ".state")
+        if [ "$current_state" == "$target_state" ]; then
+            echo "Cluster is now $target_state"
+            break
+        fi
+        echo "Current state: $current_state. Waiting..."
+        sleep 30
+    done
+}
+
 yes_or_no () {
     while true; do
         read -p "$(echo -e ${ORANGE}"$* [y/n]: "${NC})" yn

@@ -1,5 +1,5 @@
 {
-    "run_name": "Setup Tables",
+    "run_name": "Train Model",
     "existing_cluster_id": "${cluster_id}",
     "libraries": [],
     "timeout_seconds": 3600,
